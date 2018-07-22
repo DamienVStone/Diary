@@ -1,0 +1,2 @@
+# Diary
+Simple diary site
