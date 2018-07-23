@@ -1,22 +1,29 @@
 {
-  "name": "diary",
-  "version": "1.0.0",
-  "description": "Simple diary site",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/DamienVStone/Diary.git"
-  },
-  "keywords": [
-    "diary"
-  ],
-  "author": "Dmitry Nikitin",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/DamienVStone/Diary/issues"
-  },
-  "homepage": "https://github.com/DamienVStone/Diary#readme"
+    "name": "diary",
+    "version": "1.0.0",
+    "description": "Simple diary site",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "nodemon server.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/DamienVStone/Diary.git"
+    },
+    "keywords": [
+        "diary"
+    ],
+    "author": "Dmitry Nikitin",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/DamienVStone/Diary/issues"
+    },
+    "homepage": "https://github.com/DamienVStone/Diary#readme",
+    "devDependencies": {
+        "nodemon": "^1.18.3"
+    },
+    "dependencies": {
+        "express": "^4.16.3"
+    }
 }
