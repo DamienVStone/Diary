@@ -1,4 +1,4 @@
-var express = require('express'),
+﻿var express = require('express'),
     app = express(),
     port = 3000,
     bodyParser = require('body-parser');
@@ -14,31 +14,34 @@ app.listen(port, function() {
 var entries = [{
     Id: 1,
     Tags: 'Password, Mongo, Diary',
-    Value: 'superPassword1'
+    Value: 'superPassword1',
+    IsActive: true
 }, {
     Id: 2,
     Tags: 'Password, User, Administrator',
-    Value: 'superPassword2'
+    Value: 'superPassword2',
+    IsActive: true
 }, {
     Id: 3,
     Tags: 'Guide, Mongo, installation',
-    Value: 'Download and install MongoDB in docker =)))'
-}, ];
+    Value: 'Download and install MongoDB in docker =)))',
+    IsActive: true
+}];
 
-app.get("/", function(req, res) {
-    var f = '';
-    var result = entries;
-    if (req && req.query && req.query.filter) {
-        f = req.query.filter.toLowerCase();
-        result = entries.filter(function(entry) {
-            return entry.Tags.toLowerCase().indexOf(f) >= 0;
-        });
-    }
+app.get("/", (req, res) => {
+    res.sendFile("./index.html", { root: '.' });
+});
 
+app.get("/List", function(req, res) {
+    var result = entries.filter(e => e.IsActive);
+    if (req && req.query && req.query.filter)
+        result = result.filter(e => e.Tags.toLowerCase().indexOf(req.query.filter.toLowerCase()) >= 0);
     res.json(result);
 });
-app.post("/Entry", function(req, res) {
+
+app.put("/New", function(req, res) {
     if (req && req.body && req.params) {
+        var rb = req.body;
         var max = Math.max.apply(null, entries.map(function(e) {
             return e.Id;
         })) + 1;
@@ -48,16 +51,21 @@ app.post("/Entry", function(req, res) {
         if (!rb.Tags) {
             res.status(400).send("Не указаны тэги");
         }
+
         entries.push({
             Id: max,
             Tags: rb.Tags,
-            Value: rb.Value
+            Value: rb.Value,
+            IsActive: true
         });
+
+        res.status(200).send();
     } else {
-        return res.status(400).send("Не указаны необходимые параметры");
+        res.status(400).send("Не указаны необходимые параметры");
     }
 });
-app.post("/Entry/:id", function(req, res) {
+
+app.post("/Edit/:id", function(req, res) {
     if (req && req.body && req.params) {
         var rb = req.body;
         var entry = entries.find(function(e) {
@@ -77,5 +85,16 @@ app.post("/Entry/:id", function(req, res) {
         res.sendStatus(200);
     } else {
         return res.status(400).send("Не указаны необходимые параметры");
+    }
+});
+
+app.delete("/Delete/:id", function(req, res) {
+    console.log(req.params);
+    var i = entries.map(e => e.Id).indexOf(+req.params.id);
+    if (~i) {
+        entries[i].IsActive = false;
+        res.sendStatus(200);
+    } else {
+        res.status(400).send("Запись не найдена");
     }
 });
