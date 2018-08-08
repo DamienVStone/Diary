@@ -26,6 +26,11 @@ var entries = [{
     Tags: 'Guide, Mongo, installation',
     Value: 'Download and install MongoDB in docker =)))',
     IsActive: true
+}, {
+    Id: 4,
+    Tags: 'User, Mongo, Test, ivan.ivanov@ingos.ru',
+    Value: 'Zxcvbnm,./',
+    IsActive: true
 }];
 
 app.get("/", (req, res) => {
@@ -46,10 +51,10 @@ app.put("/New", function(req, res) {
             return e.Id;
         })) + 1;
         if (!rb.Value) {
-            res.status(400).send("Не указано значение");
+            return res.status(400).send("Не указано значение");
         }
         if (!rb.Tags) {
-            res.status(400).send("Не указаны тэги");
+            return res.status(400).send("Не указаны тэги");
         }
 
         entries.push({
@@ -59,15 +64,21 @@ app.put("/New", function(req, res) {
             IsActive: true
         });
 
-        res.status(200).send();
+        return res.status(200).send();
     } else {
-        res.status(400).send("Не указаны необходимые параметры");
+        return res.status(400).send("Не указаны необходимые параметры");
     }
 });
 
 app.post("/Edit/:id", function(req, res) {
     if (req && req.body && req.params) {
         var rb = req.body;
+        if (!rb.Value) {
+            return res.status(400).send("Не указано значение");
+        }
+        if (!rb.Tags) {
+            return res.status(400).send("Не указаны тэги");
+        }
         var entry = entries.find(function(e) {
             return e.Id == req.params.id;
         });
@@ -79,7 +90,7 @@ app.post("/Edit/:id", function(req, res) {
                 entry.Tags = rb.Tags;
             }
         } else {
-            res.status(400).send("Запись не найдена");
+            return res.status(400).send("Запись не найдена");
         }
 
         res.sendStatus(200);
@@ -93,8 +104,8 @@ app.delete("/Delete/:id", function(req, res) {
     var i = entries.map(e => e.Id).indexOf(+req.params.id);
     if (~i) {
         entries[i].IsActive = false;
-        res.sendStatus(200);
+        return res.sendStatus(200);
     } else {
-        res.status(400).send("Запись не найдена");
+        return res.status(400).send("Запись не найдена");
     }
 });
