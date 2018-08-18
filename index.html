@@ -3,33 +3,6 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <style>
-        .bt {
-            border-top: 1px solid gray;
-        }
-        
-        .bl {
-            border-left: 1px solid gray;
-        }
-        
-        .br {
-            border-right: 1px solid gray;
-        }
-        
-        .bb {
-            border-bottom: 1px solid gray;
-        }
-        
-        .deleteBtn {
-            border: 1px solid black;
-            border-radius: 30px;
-            color: black;
-            padding: 2vw;
-            cursor: pointer;
-            display: inline-block;
-            vertical-align: top;
-            margin: 2vw;
-        }
-        
         input {
             width: 100%;
         }
@@ -37,26 +10,32 @@
 </head>
 
 <body>
+
+
     <label for="filter">Поиск</label>
     <input type="text" id="filter" onkeyup="getList(this.value)" />
     <div id="content">Загрузка...</div>
     <script type="text/javascript">
-        var entryTemplate = "<hr/><input type='text' id='tags-{{id}}' value='{{tags}}'/><input type='text' id='value-{{id}}' value='{{value}}' /><input type='button' onclick='save({{id}})' value='Сохранить'><input type='button' onclick='remove({{id}})' value='Удалить'>";
-        var newEntryTemplate = "<hr/><input type='text' id='tags'/><input type='text' id='value'/><input type='button' onclick='add()' value='Добавить'>";
+        var entryTemplate =
+            "<hr/><input type='text' id='tags-{{id}}' value='{{tags}}'/><input type='text' id='value-{{id}}' value='{{value}}' /><input type='button' onclick='save(\"{{id}}\")' value='Сохранить'><input type='button' onclick='remove(\"{{id}}\")' value='Удалить'>";
+        var newEntryTemplate =
+            "<hr/><input type='text' id='tags'/><input type='text' id='value'/><input type='button' onclick='add()' value='Добавить'>";
 
         function getList(filter) {
             var content = document.getElementById("content");
-            content.innerHTML += "Загрузка...";
+            content.innerHTML = "Загрузка...";
             GET("/List?filter=" + filter,
                 function(r) {
                     content.innerHTML = "";
-                    for (let i = 0; i < r.length; i++) {
-                        const entry = r[i];
-                        content.innerHTML +=
-                            entryTemplate
-                            .replace("{{tags}}", entry.Tags)
-                            .replace("{{value}}", entry.Value)
-                            .replace(/\{\{id\}\}/g, entry.Id);
+                    if (r) {
+                        for (let i = 0; i < r.length; i++) {
+                            const entry = r[i];
+                            content.innerHTML +=
+                                entryTemplate
+                                .replace("{{tags}}", entry.Tags)
+                                .replace("{{value}}", entry.Value)
+                                .replace(/\{\{id\}\}/g, entry._id);
+                        }
                     }
 
                     content.innerHTML += newEntryTemplate;
@@ -68,10 +47,8 @@
             var xhr = new XMLHttpRequest();
             xhr.open('GET', url);
             xhr.onload = function() {
-                if (xhr.status === 200) {
+                if (checkResponse(xhr)) {
                     callback(JSON.parse(xhr.responseText))
-                } else {
-                    alert('Ошибка: ' + xhr.responseText + " (" + xhr.status + ")");
                 }
             };
 
@@ -85,11 +62,7 @@
             xhr.open('PUT', '/New');
             xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
             xhr.onload = function() {
-                if (xhr.status === 200) {
-                    getList('');
-                } else if (xhr.status !== 200) {
-                    alert('Ошибка: ' + xhr.responseText + " (" + xhr.status + ")");
-                }
+                checkResponse(xhr);
             };
 
             xhr.send(encodeURI('Tags=' + tags + '&Value=' + v));
@@ -103,11 +76,7 @@
             xhr.open('POST', '/Edit/' + id);
             xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
             xhr.onload = function() {
-                if (xhr.status === 200) {
-                    getList('');
-                } else if (xhr.status !== 200) {
-                    alert('Ошибка: ' + xhr.responseText + " (" + xhr.status + ")");
-                }
+                checkResponse(xhr);
             };
 
             xhr.send(encodeURI('Tags=' + tags + '&Value=' + v));
@@ -116,19 +85,34 @@
         function remove(id) {
             if (!confirm("Удалить?")) return;
             var xhr = new XMLHttpRequest();
-            var tags = document.getElementById("tags").value;
-            var v = document.getElementById("value").value;
             xhr.open('DELETE', '/Delete/' + id);
             xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
             xhr.onload = function() {
-                if (xhr.status === 200) {
-                    getList('');
-                } else if (xhr.status !== 200) {
-                    alert('Ошибка: ' + xhr.responseText + " (" + xhr.status + ")");
-                }
+                checkResponse(xhr);
             };
 
             xhr.send();
+        }
+
+        function getCookie(name) {
+            var matches = document.cookie.match(new RegExp(
+                "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+            ));
+            return matches ? decodeURIComponent(matches[1]) : undefined;
+        }
+
+        function checkResponse(xhr) {
+            console.log(xhr);
+            if (xhr.status === 200) {
+                getList('');
+                return true;
+            } else if (xhr.status === 401) {
+                document.location.href = "/signin";
+            } else if (xhr.status !== 200) {
+                alert('Ошибка: ' + xhr.responseText + " (" + xhr.status + ")");
+            }
+
+            return false;
         }
 
         getList('');
