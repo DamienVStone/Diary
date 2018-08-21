@@ -21,7 +21,7 @@ authService.register = function(req, res) {
             if (err) {
                 return res.json({
                     success: false,
-                    message: "That email address already exists."
+                    message: "That email address already exists. " + err
                 });
             }
 
@@ -37,6 +37,7 @@ authService.authenticate = function(req, res) {
     User.findOne({
         email: req.body.email
     }, function(err, user) {
+        console.log('Found user: ' + user.email);
         if (err) {
             throw err;
         }
@@ -48,9 +49,14 @@ authService.authenticate = function(req, res) {
         } else {
             user.comparePassword(req.body.password, function(err, isMatch) {
                 if (isMatch && !err) {
-                    var token = jwt.sign(user.toJSON(), config.secret, {
+                    console.log("Password is ok for: " + user.email);
+                    var token = jwt.sign({ email: user.email, password: user.password, _id: user._id }, config.secret, {
                         expiresIn: 600
                     });
+
+                    jwt.verify(token, config.secret, function(err, data) {
+                        console.log(err, data);
+                    })
 
                     res.json({
                         success: true,

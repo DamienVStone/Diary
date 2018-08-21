@@ -11,6 +11,8 @@ var DataSchema = new mongoose.Schema({
     },
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     dateCreated: Date,
+    dateChanged: Date,
+    isActive: Boolean
 });
 
 

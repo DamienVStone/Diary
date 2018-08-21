@@ -1,4 +1,3 @@
-var mongoClient = require("mongodb").MongoClient;
 var objectId = require('mongodb').ObjectID;
 var Data = require('../models/data');
 
@@ -10,18 +9,17 @@ dataService.home = (req, res) => {
 };
 
 dataService.list = function(req, res) {
-    console.log("getList");
-    connect(function(client, collection) {
-        collection.find({
-            IsActive: true,
-            Tags: {
-                $regex: ".*" + req.query.filter.toLowerCase() + ".*"
+    console.log(req.user);
+    Data.find({
+            isActive: true,
+            owner: req.user._id,
+            tags: {
+                $regex: ".*" + req.query.filter + ".*",
+                $options: "-i"
             }
-        }).toArray(function(err, results) {
-            client.close();
-            res.json(results);
-        });
-    });
+        }).exec()
+        .then(result => res.json(result))
+        .catch(err => console.log(err));
 };
 
 dataService.signin = function(req, res) {
@@ -34,29 +32,25 @@ dataService.new = function(req, res) {
     console.log("New");
     if (req && req.body && req.params) {
         var rb = req.body;
-        if (!rb.Value) {
+        if (!rb.value) {
             return res.status(400).send("Не указано значение");
         }
-        if (!rb.Tags) {
+        if (!rb.tags) {
             return res.status(400).send("Не указаны тэги");
         }
 
-        connect(function(client, collection) {
-            var entry = {
-                Tags: rb.Tags,
-                Value: rb.Value,
-                IsActive: true
-            };
+        var newData = new Data({
+            tags: rb.tags,
+            value: rb.value,
+            isActive: true,
+            owner: req.user._id,
+            dateCreated: new Date(),
+            dateChanged: new Date()
+        });
 
-            collection.insertOne(entry, function(err, result) {
-                if (err) {
-                    return console.log(err);
-                }
-
-                console.log(result.ops);
-                client.close();
-                return res.status(200).send();
-            });
+        newData.save((err, result) => {
+            if (err) { console.log; return; }
+            res.status(200).send();
         });
     } else {
         return res.status(400).send("Не указаны необходимые параметры");
@@ -68,34 +62,31 @@ dataService.edit = function(req, res) {
     console.log(req && req.body && req.params);
     if (req && req.body && req.params) {
         var rb = req.body;
-        if (!rb.Value) {
+        if (!rb.value) {
             return res.status(400).send("Не указано значение");
         }
-        if (!rb.Tags) {
+        if (!rb.tags) {
             return res.status(400).send("Не указаны тэги");
         }
 
-        connect(function(client, collection) {
-            console.log("update after connect ************************");
-            collection.updateOne({
-                    _id: new objectId(req.params.id)
-                }, {
-                    $set: {
-                        Tags: rb.Tags,
-                        Value: rb.Value
-                    }
-                },
-                function(err, result) {
-                    if (err) {
-                        console.log(err);
-                        return res.status(400).send(err);
-                    }
-
-                    console.log(result);
-                    client.close();
+        Data.updateOne({
+                _id: new objectId(req.params.id)
+            }, {
+                $set: {
+                    tags: rb.tags,
+                    value: rb.value,
+                    dateChanged: new Date()
                 }
-            );
-        });
+            },
+            function(err, result) {
+                if (err) {
+                    console.log(err);
+                    return res.status(400).send(err);
+                }
+
+                console.log(result);
+            }
+        );
     } else {
         return res.status(400).send("Не указаны необходимые параметры");
     }
@@ -106,37 +97,23 @@ dataService.delete = function(req, res) {
         return res.status(400).send("Не указаны необходимые параметры");
     }
 
-    connect(function(client, collection) {
-        collection.updateOne({
-                _id: new objectId(req.params.id)
-            }, {
-                $set: {
-                    IsActive: false
-                }
-            },
-            function(err, result) {
-                if (err) {
-                    console.log(err);
-                    return res.status(400).send(err);
-                }
-
-                client.close();
-                return res.status(200).send();
+    Data.updateOne({
+            _id: new objectId(req.params.id)
+        }, {
+            $set: {
+                isActive: false,
+                dateChanged: new Date()
             }
-        );
-    });
-};
+        },
+        function(err, result) {
+            if (err) {
+                console.log(err);
+                return res.status(400).send(err);
+            }
 
-function connect(callback) {
-    console.log("connect");
-    mongoClient.connect("mongodb://hXSmmJHt9NxG5nHA:LNyYvKZaVt7kDDS4@192.168.0.104:27017/", function(err, client) {
-        if (err) {
-            return console.log(err);
+            return res.status(200).send();
         }
-        const db = client.db("diary");
-        const collection = db.collection("data");
-        callback(client, collection);
-    });
-}
+    );
+};
 
 module.exports = { 'DataService': dataService };

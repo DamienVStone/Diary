@@ -1,4 +1,4 @@
 module.exports = {
-    'secret': 'putsomethingtopsecrethere',
+    'secret': '',
     'database': ''
 };

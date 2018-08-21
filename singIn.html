@@ -28,7 +28,6 @@
                     var res = JSON.parse(xhr.responseText);
                     console.log();
                     var token = res.token;
-                    // var token = 'HelloWorld';
                     var d = new Date();
                     d.setMinutes(d.getMinutes() + 10);
                     document.cookie = "token=" + token + ";expires=" + d +

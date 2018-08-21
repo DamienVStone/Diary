@@ -32,8 +32,8 @@
                             const entry = r[i];
                             content.innerHTML +=
                                 entryTemplate
-                                .replace("{{tags}}", entry.Tags)
-                                .replace("{{value}}", entry.Value)
+                                .replace("{{tags}}", entry.tags)
+                                .replace("{{value}}", entry.value)
                                 .replace(/\{\{id\}\}/g, entry._id);
                         }
                     }
@@ -46,10 +46,9 @@
         function GET(url, callback) {
             var xhr = new XMLHttpRequest();
             xhr.open('GET', url);
+            xhr.setRequestHeader('Authorization', getCookie('token'));
             xhr.onload = function() {
-                if (checkResponse(xhr)) {
-                    callback(JSON.parse(xhr.responseText))
-                }
+                checkResponse(xhr, () => callback(JSON.parse(xhr.responseText)))
             };
 
             xhr.send();
@@ -61,11 +60,14 @@
             var v = document.getElementById("value").value;
             xhr.open('PUT', '/New');
             xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.setRequestHeader('Authorization', getCookie('token'));
             xhr.onload = function() {
-                checkResponse(xhr);
+                checkResponse(xhr, function() {
+                    getList('')
+                });
             };
 
-            xhr.send(encodeURI('Tags=' + tags + '&Value=' + v));
+            xhr.send(encodeURI('tags=' + tags + '&value=' + v));
         }
 
         function save(id) {
@@ -75,11 +77,12 @@
             var v = document.getElementById("value-" + id).value;
             xhr.open('POST', '/Edit/' + id);
             xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.setRequestHeader('Authorization', getCookie('token'));
             xhr.onload = function() {
                 checkResponse(xhr);
             };
 
-            xhr.send(encodeURI('Tags=' + tags + '&Value=' + v));
+            xhr.send(encodeURI('tags=' + tags + '&value=' + v));
         }
 
         function remove(id) {
@@ -87,8 +90,11 @@
             var xhr = new XMLHttpRequest();
             xhr.open('DELETE', '/Delete/' + id);
             xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.setRequestHeader('Authorization', getCookie('token'));
             xhr.onload = function() {
-                checkResponse(xhr);
+                checkResponse(xhr, function() {
+                    getList('')
+                });
             };
 
             xhr.send();
@@ -101,10 +107,11 @@
             return matches ? decodeURIComponent(matches[1]) : undefined;
         }
 
-        function checkResponse(xhr) {
+        function checkResponse(xhr, success) {
             console.log(xhr);
             if (xhr.status === 200) {
-                getList('');
+                if (success)
+                    success();
                 return true;
             } else if (xhr.status === 401) {
                 document.location.href = "/signin";

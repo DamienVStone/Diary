@@ -29,9 +29,6 @@ basicRoutes.delete("/Delete/:id", authService.authorized, dataService.delete);
 
 apiRoutes.post("/register", authService.register);
 apiRoutes.post("/authenticate", authService.authenticate);
-apiRoutes.get('/dashboard', authService.authorized, function(req, res) {
-    res.send('It worked! User id is: ' + req.user._id + '.');
-});
 
 app.use('/api', apiRoutes);
 app.use('/', basicRoutes);
